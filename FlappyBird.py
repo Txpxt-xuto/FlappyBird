@@ -27,3 +27,14 @@ def pipe_animation():
             pipes.remove(pipe)
         if bird_rect.colliderect(pipe):
             game_over = True
+def score_update():
+    global score,score_time,high_score_time
+    if pipes:
+        for pipe in pipes:
+            if 65 < pipe.centerx < 69 and score_time:
+                score += 1 
+                score_time = False
+            if pipe.left <= 0:
+                score_time = True
+    if score > high_score:
+        high_score = score
