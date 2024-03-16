@@ -1,9 +1,10 @@
+#--  FlappyBird game --#
 import sys
 import time
 import random
 import pygame
 
-ptgame.init()
+pygame.init()
 clock = pygame.time.Clock()
 
 def draw_floor():
@@ -51,3 +52,8 @@ def draw_score(game_state):
         high_sacore_text = score_font.render(f"Score:{high_score}",True,(255,255,255))
         high_score_rect = high_score_text.get_rect(center=(width // 2,506))
         screen.blit(high_sacore_text,high_score_rect)
+
+width, height = 350, 622
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("FlappyBird")
