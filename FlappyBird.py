@@ -38,3 +38,16 @@ def score_update():
                 score_time = True
     if score > high_score:
         high_score = score
+def draw_score(game_state):
+    if game_state == "game_on":
+        score_text = score_font.render(str(score),True,(255,255,255))
+        score_rect = score_text.get_rect(center=(width // 2,66))
+        screen.blit(score_text,score_rect)
+    elif game_state == "game_over":
+        score_text = score_font.render(f"Score:{score}",True,(255,255,255))
+        score_rect = score_text.get_rect(center=(width // 2,66))
+        screen.blit(score_text,score_rect)
+
+        high_sacore_text = score_font.render(f"Score:{high_score}",True,(255,255,255))
+        high_score_rect = high_score_text.get_rect(center=(width // 2,506))
+        screen.blit(high_sacore_text,high_score_rect)
