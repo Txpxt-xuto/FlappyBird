@@ -57,3 +57,26 @@ width, height = 350, 622
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("FlappyBird")
+
+back_img = pygame.image.load("")
+floor_img = pygame.image.load("")
+floor_x = 0
+
+bird_up = pygame.image.load("")
+bird_down = pygame.image.load("")
+bird_mid = pygame.image.load("")
+birds = [bird_down,bird_mid,bird_up]
+bird_index = 0
+bird_flap = pygame.USEREVENT
+pygame.time.set_timer(bird_flap, 200)
+bird_img = birds[bird_index]
+bird_rect = bird_img.get_rect(center=(67,622 // 2))
+bird_movement = 0
+gravity = 0.17
+
+pipe_img = pygame.image.load("")
+pipe_height = [400,350,533,490]
+
+pipes = []
+create_pipe = pygame.USEREVENT + 1
+pygame.time.set_timer(create_pipe, 1200)
