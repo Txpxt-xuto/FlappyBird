@@ -58,7 +58,7 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("FlappyBird")
 
-back_img = pygame.image.load("bg_flappybird.jpg")
+back_img = pygame.image.load("C:\Users\User\Documents\GitHub\FlappyBird\bg_flappybird.jpg")
 floor_img = pygame.image.load("floor_img.jpg")
 floor_x = 0
 
