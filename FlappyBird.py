@@ -12,7 +12,7 @@ game_clock = pygame.time.Clock()
 game_fps = 60  
 
 # defining the width and height of the game screen  
-SCREEN_WIDTH = 600  
+SCREEN_WIDTH = 550  
 SCREEN_HEIGHT = 735  
 
 # using the set_mode() function of the pygame.display module to set the size of the screen  
@@ -39,9 +39,9 @@ playerScore = 0
 passPipe = False  
 
 # loading images  
-background = pygame.image.load('FlappyBird\j.jpg')  
-base = pygame.image.load('FlappyBird\pipe.jpg')  
-button = pygame.image.load('FlappyBird\pipe.jpg')  
+background = pygame.image.load('FlappyBird\home.jpg')  
+base = pygame.image.load('FlappyBird\home.jpg')  
+button = pygame.image.load('FlappyBird\h.jpg')  
 
 # defining a function to draw the text on the screen  
 def drawText(text, fontStyle, textColor, x_coordinate, y_coordinate):  
@@ -79,7 +79,7 @@ class FlappyBird(pygame.sprite.Sprite):
         for i in range(1, 4):  
             # loading the sprite bird images from the directory  
             # using the load() function of the pygame.image module  
-            image = pygame.image.load(f'FlappyBird\zd.jpg')  
+            image = pygame.image.load(f'FlappyBird\Remove-bg.ai_1710856599977.png')  
             
             # using the append() function to add the image to the list  
             self.image_list.append(image)  
