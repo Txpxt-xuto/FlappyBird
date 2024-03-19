@@ -1,154 +1,249 @@
-#--  FlappyBird game --#
-import sys
-import time
-import random
-import pygame
+# Import module 
+import random 
+import sys 
+import pygame 
+from pygame.locals import *
 
-pygame.init()
-clock = pygame.time.Clock()
+# All the Game Variables 
+window_width = 600
+window_height = 499
 
-def draw_floor():
-    screen.blit(floor_img, (floor_x, 520))
-    screen.blit(floor_img, (floor_x + 480, 520))
-def create_pipes():
-    pipe_y = random.choice(pipe_height)
-    top_pipe = pipe_img.get_rect(midbottom=(467, pipe_y - 300))
-    bottom_pipe = pipe_img.get_rect(midbottom=(467, pipe_y))
-    return top_pipe, bottom_pipe
-def pipe_animation():
-    global game_over, score_time
-    for pipe in pipes:
-        if pipe.top < 0:
-            flipped_pipe = pygame.transform.flip(pipe_img,False,True)
-            screen.blit(flipped_pipe, pipe)
-        else:
-            screen.blit(pipe_img, pipe)
-        pipe.centerx -=3
-        if pipe.right < 0:
-            pipes.remove(pipe)
-        if bird_rect.colliderect(pipe):
-            game_over = True
-def score_update():
-    global score,score_time,high_score_time
-    if pipes:
-        for pipe in pipes:
-            if 65 < pipe.centerx < 69 and score_time:
-                score += 1 
-                score_time = False
-            if pipe.left <= 0:
-                score_time = True
-    if score > high_score:
-        high_score = score
-def draw_score(game_state):
-    if game_state == "game_on":
-        score_text = score_font.render(str(score),True,(255,255,255))
-        score_rect = score_text.get_rect(center=(width // 2,66))
-        screen.blit(score_text,score_rect)
-    elif game_state == "game_over":
-        score_text = score_font.render(f"Score:{score}",True,(255,255,255))
-        score_rect = score_text.get_rect(center=(width // 2,66))
-        screen.blit(score_text,score_rect)
+# set height and width of window 
+window = pygame.display.set_mode((window_width, window_height)) 
+elevation = window_height * 0.8
+game_images = {} 
+framepersecond = 32
+pipeimage = 'images/pipe.png'
+background_image = 'images/background.jpg'
+birdplayer_image = 'images/bird.png'
+sealevel_image = 'images/base.jfif'
 
-        high_score_text = score_font.render(f"Score:{high_score}",True,(255,255,255))
-        high_score_rect = high_score_text.get_rect(center=(width // 2,506))
-        screen.blit(high_score_text,high_score_rect)
 
-width, height = 350, 622
-clock = pygame.time.Clock()
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("FlappyBird")
+def flappygame(): 
+	your_score = 0
+	horizontal = int(window_width/5) 
+	vertical = int(window_width/2) 
+	ground = 0
+	mytempheight = 100
 
-back_img = pygame.image.load("https://imgur.com/OsGIIHE.png")
-floor_img = pygame.image.load("")
-floor_x = 0
+	# Generating two pipes for blitting on window 
+	first_pipe = createPipe() 
+	second_pipe = createPipe() 
 
-bird_up = pygame.image.load("")
-bird_down = pygame.image.load("")
-bird_mid = pygame.image.load("")
-birds = [bird_down,bird_mid,bird_up]
-bird_index = 0
-bird_flap = pygame.USEREVENT
-pygame.time.set_timer(bird_flap, 200)
-bird_img = birds[bird_index]
-bird_rect = bird_img.get_rect(center=(67,622 // 2))
-bird_movement = 0
-gravity = 0.17
+	# List containing lower pipes 
+	down_pipes = [ 
+		{'x': window_width+300-mytempheight, 
+		'y': first_pipe[1]['y']}, 
+		{'x': window_width+300-mytempheight+(window_width/2), 
+		'y': second_pipe[1]['y']}, 
+	] 
 
-pipe_img = pygame.image.load("")
-pipe_height = [400,350,533,490]
+	# List Containing upper pipes 
+	up_pipes = [ 
+		{'x': window_width+300-mytempheight, 
+		'y': first_pipe[0]['y']}, 
+		{'x': window_width+200-mytempheight+(window_width/2), 
+		'y': second_pipe[0]['y']}, 
+	] 
 
-pipes = []
-create_pipe = pygame.USEREVENT + 1
-pygame.time.set_timer(create_pipe, 1200)
+	# pipe velocity along x 
+	pipeVelX = -4
 
-game_over = False
-over_img = pygame.image.load("").convert_alpha()
-over_rect = over_img.get_rect(center=(width // 2, height // 2))
+	# bird velocity 
+	bird_velocity_y = -9
+	bird_Max_Vel_Y = 10
+	bird_Min_Vel_Y = -8
+	birdAccY = 1
 
-score = 0
-high_score = 0
-score_time = True
-score_font = pygame.font.Font("Tahoma",27)
+	bird_flap_velocity = -8
+	bird_flapped = False
+	while True: 
+		for event in pygame.event.get(): 
+			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE): 
+				pygame.quit() 
+				sys.exit() 
+			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP): 
+				if vertical > 0: 
+					bird_velocity_y = bird_flap_velocity 
+					bird_flapped = True
 
-running = True
-while running:
-    clock.tick(120)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            sys.exit()
-        
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and not game_over:
-                bird_movement = 0
-                bird_movement = -7
+		# This function will return true 
+		# if the flappybird is crashed 
+		game_over = isGameOver(horizontal, 
+							vertical, 
+							up_pipes, 
+							down_pipes) 
+		if game_over: 
+			return
 
-            if event.key == pygame.K_SPACE and game_over:
-                game_over = False
-                pipes = []
-                bird_movement = 0
-                bird_rect = bird_img.get_rect(center=(67,622 // 2))
-                score_time = True
-                score = 0
-        if event.type == bird_flap:
-            bird_index +=1
-            
-            if bird_index > 2:
-                bird_index = 0
-            
-            bird_img = birds[bird_index]
-            bird_rect = bird_up.get_rect(center = bird_rect.center)
+		# check for your_score 
+		playerMidPos = horizontal + game_images['flappybird'].get_width()/2
+		for pipe in up_pipes: 
+			pipeMidPos = pipe['x'] + game_images['pipeimage'][0].get_width()/2
+			if pipeMidPos <= playerMidPos < pipeMidPos + 4: 
+				your_score += 1
+				print(f"Your your_score is {your_score}") 
 
-        if event.type == create_pipe:
-            pipes.extend(create_pipes())
+		if bird_velocity_y < bird_Max_Vel_Y and not bird_flapped: 
+			bird_velocity_y += birdAccY 
 
-    screen.blit(floor_img, (floor_x, 550))
-    screen.blit(back_img, (0, 0))
+		if bird_flapped: 
+			bird_flapped = False
+		playerHeight = game_images['flappybird'].get_height() 
+		vertical = vertical + \ 
+		    min(bird_velocity_y, elevation - vertical - playerHeight) 
 
-    if not game_over:
-        bird_movement += gravity
-        bird_rect.centery += bird_movement
-        rotated_bird = pygame.transform.rotozoom(bird_img,bird_movement*-6,1)
+		# move pipes to the left 
+		for upperPipe, lowerPipe in zip(up_pipes, down_pipes): 
+			upperPipe['x'] += pipeVelX 
+			lowerPipe['x'] += pipeVelX 
 
-        if bird_rect.top < 5 or bird_rect.bottom >=550:
-            game_over = True
-        
-        screen.blit(rotated_bird, bird_rect)
-        pipe_animation()
-        score_update()
-        draw_score("game_on")
+		# Add a new pipe when the first is 
+		# about to cross the leftmost part of the screen 
+		if 0 < up_pipes[0]['x'] < 5: 
+			newpipe = createPipe() 
+			up_pipes.append(newpipe[0]) 
+			down_pipes.append(newpipe[1]) 
 
-    elif game_over:
-        screen.blit(over_img, over_rect)
-        draw_score("game_over")
+		# if the pipe is out of the screen, remove it 
+		if up_pipes[0]['x'] < -game_images['pipeimage'][0].get_width(): 
+			up_pipes.pop(0) 
+			down_pipes.pop(0) 
 
-    floor_x -=1
-    if floor_x < -448:
-        floor_x = 0
+		# Lets blit our game images now 
+		window.blit(game_images['background'], (0, 0)) 
+		for upperPipe, lowerPipe in zip(up_pipes, down_pipes): 
+			window.blit(game_images['pipeimage'][0], 
+						(upperPipe['x'], upperPipe['y'])) 
+			window.blit(game_images['pipeimage'][1], 
+						(lowerPipe['x'], lowerPipe['y'])) 
 
-    draw_floor()
+		window.blit(game_images['sea_level'], (ground, elevation)) 
+		window.blit(game_images['flappybird'], (horizontal, vertical)) 
 
-    pygame.display.update()
+		# Fetching the digits of score. 
+		numbers = [int(x) for x in list(str(your_score))] 
+		width = 0
 
-pygame.quit()
-sys.exit()
+		# finding the width of score images from numbers. 
+		for num in numbers: 
+			width += game_images['scoreimages'][num].get_width() 
+		Xoffset = (window_width - width)/1.1
+
+		# Blitting the images on the window. 
+		for num in numbers: 
+			window.blit(game_images['scoreimages'][num], 
+						(Xoffset, window_width*0.02)) 
+			Xoffset += game_images['scoreimages'][num].get_width() 
+
+		# Refreshing the game window and displaying the score. 
+		pygame.display.update() 
+		framepersecond_clock.tick(framepersecond) 
+
+
+def isGameOver(horizontal, vertical, up_pipes, down_pipes): 
+	if vertical > elevation - 25 or vertical < 0: 
+		return True
+
+	for pipe in up_pipes: 
+		pipeHeight = game_images['pipeimage'][0].get_height() 
+		if(vertical < pipeHeight + pipe['y'] and\ 
+		abs(horizontal - pipe['x']) < game_images['pipeimage'][0].get_width()): 
+			return True
+
+	for pipe in down_pipes: 
+		if (vertical + game_images['flappybird'].get_height() > pipe['y']) and\ 
+		abs(horizontal - pipe['x']) < game_images['pipeimage'][0].get_width(): 
+			return True
+	return False
+
+
+def createPipe(): 
+	offset = window_height/3
+	pipeHeight = game_images['pipeimage'][0].get_height() 
+	y2 = offset + \ 
+		random.randrange( 
+			0, int(window_height - game_images['sea_level'].get_height() - 1.2 * offset)) 
+	pipeX = window_width + 10
+	y1 = pipeHeight - y2 + offset 
+	pipe = [ 
+		# upper Pipe 
+		{'x': pipeX, 'y': -y1}, 
+
+		# lower Pipe 
+		{'x': pipeX, 'y': y2} 
+	] 
+	return pipe 
+
+
+# program where the game starts 
+if __name__ == "__main__": 
+
+		# For initializing modules of pygame library 
+	pygame.init() 
+	framepersecond_clock = pygame.time.Clock() 
+
+	# Sets the title on top of game window 
+	pygame.display.set_caption('Flappy Bird Game') 
+
+	# Load all the images which we will use in the game 
+
+	# images for displaying score 
+	game_images['scoreimages'] = ( 
+		pygame.image.load('images/0.png').convert_alpha(), 
+		pygame.image.load('images/1.png').convert_alpha(), 
+		pygame.image.load('images/2.png').convert_alpha(), 
+		pygame.image.load('images/3.png').convert_alpha(), 
+		pygame.image.load('images/4.png').convert_alpha(), 
+		pygame.image.load('images/5.png').convert_alpha(), 
+		pygame.image.load('images/6.png').convert_alpha(), 
+		pygame.image.load('images/7.png').convert_alpha(), 
+		pygame.image.load('images/8.png').convert_alpha(), 
+		pygame.image.load('images/9.png').convert_alpha() 
+	) 
+	game_images['flappybird'] = pygame.image.load( 
+		birdplayer_image).convert_alpha() 
+	game_images['sea_level'] = pygame.image.load( 
+		sealevel_image).convert_alpha() 
+	game_images['background'] = pygame.image.load( 
+		background_image).convert_alpha() 
+	game_images['pipeimage'] = (pygame.transform.rotate(pygame.image.load( 
+		pipeimage).convert_alpha(), 180), pygame.image.load( 
+	pipeimage).convert_alpha()) 
+
+	print("WELCOME TO THE FLAPPY BIRD GAME") 
+	print("Press space or enter to start the game") 
+
+	# Here starts the main game 
+
+	while True: 
+
+		# sets the coordinates of flappy bird 
+
+		horizontal = int(window_width/5) 
+		vertical = int( 
+			(window_height - game_images['flappybird'].get_height())/2) 
+		ground = 0
+		while True: 
+			for event in pygame.event.get(): 
+
+				# if user clicks on cross button, close the game 
+				if event.type == QUIT or (event.type == KEYDOWN and \ 
+										event.key == K_ESCAPE): 
+					pygame.quit() 
+					sys.exit() 
+
+				# If the user presses space or 
+				# up key, start the game for them 
+				elif event.type == KEYDOWN and (event.key == K_SPACE or\ 
+												event.key == K_UP): 
+					flappygame() 
+
+				# if user doesn't press anykey Nothing happen 
+				else: 
+					window.blit(game_images['background'], (0, 0)) 
+					window.blit(game_images['flappybird'], 
+								(horizontal, vertical)) 
+					window.blit(game_images['sea_level'], (ground, elevation)) 
+					pygame.display.update() 
+					framepersecond_clock.tick(framepersecond) 
