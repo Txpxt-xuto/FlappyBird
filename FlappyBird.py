@@ -40,7 +40,7 @@ passPipe = False
 
 # loading images  
 background = pygame.image.load('FlappyBird\home.jpg')  
-base = pygame.image.load('FlappyBird\home.jpg')  
+base = pygame.image.load('FlappyBird\Hyo.jpg')  
 button = pygame.image.load('FlappyBird\h.jpg')  
 
 # defining a function to draw the text on the screen  
