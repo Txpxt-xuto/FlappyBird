@@ -1,249 +1,318 @@
-# Import module 
-import random 
-import sys 
-import pygame 
-from pygame.locals import *
+import pygame               # importing the pygame module  
+from pygame.locals import * # importing everything from the pygame.locals module  
+import random               # importing the random module  
 
-# All the Game Variables 
-window_width = 600
-window_height = 499
+# using the init() function to initialize the pygame window  
+pygame.init()  
 
-# set height and width of window 
-window = pygame.display.set_mode((window_width, window_height)) 
-elevation = window_height * 0.8
-game_images = {} 
-framepersecond = 32
-pipeimage = 'images/pipe.png'
-background_image = 'images/background.jpg'
-birdplayer_image = 'images/bird.png'
-sealevel_image = 'images/base.jfif'
+# creating an object of the Clock() class of the pygame.time module  
+game_clock = pygame.time.Clock()  
 
+# defining the fps for the game  
+game_fps = 60  
 
-def flappygame(): 
-	your_score = 0
-	horizontal = int(window_width/5) 
-	vertical = int(window_width/2) 
-	ground = 0
-	mytempheight = 100
+# defining the width and height of the game screen  
+SCREEN_WIDTH = 600  
+SCREEN_HEIGHT = 735  
 
-	# Generating two pipes for blitting on window 
-	first_pipe = createPipe() 
-	second_pipe = createPipe() 
+# using the set_mode() function of the pygame.display module to set the size of the screen  
+display_screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  
 
-	# List containing lower pipes 
-	down_pipes = [ 
-		{'x': window_width+300-mytempheight, 
-		'y': first_pipe[1]['y']}, 
-		{'x': window_width+300-mytempheight+(window_width/2), 
-		'y': second_pipe[1]['y']}, 
-	] 
+# setting the title of the application using the set_caption() function  
+pygame.display.set_caption('Flappy Bird - JAVATPOINT')  
 
-	# List Containing upper pipes 
-	up_pipes = [ 
-		{'x': window_width+300-mytempheight, 
-		'y': first_pipe[0]['y']}, 
-		{'x': window_width+200-mytempheight+(window_width/2), 
-		'y': second_pipe[0]['y']}, 
-	] 
+# defining the font style  
+fontStyle = pygame.font.SysFont('arial black', 55)  
 
-	# pipe velocity along x 
-	pipeVelX = -4
+# defining the font color  
+black = (0, 0, 0)  
 
-	# bird velocity 
-	bird_velocity_y = -9
-	bird_Max_Vel_Y = 10
-	bird_Min_Vel_Y = -8
-	birdAccY = 1
+# declaring and initializing the game variables  
+baseScroll = 0  
+scrollSpeed = 4  
+birdFlying = False  
+gameOver = False  
+pipeGap = 150  
+pipeFrequency = 1450 # milliseconds  
+lastPipe = pygame.time.get_ticks() - pipeFrequency  
+playerScore = 0  
+passPipe = False  
 
-	bird_flap_velocity = -8
-	bird_flapped = False
-	while True: 
-		for event in pygame.event.get(): 
-			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE): 
-				pygame.quit() 
-				sys.exit() 
-			if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP): 
-				if vertical > 0: 
-					bird_velocity_y = bird_flap_velocity 
-					bird_flapped = True
+# loading images  
+background = pygame.image.load('FlappyBird\j.jpg')  
+base = pygame.image.load('FlappyBird\pipe.jpg')  
+button = pygame.image.load('FlappyBird\pipe.jpg')  
 
-		# This function will return true 
-		# if the flappybird is crashed 
-		game_over = isGameOver(horizontal, 
-							vertical, 
-							up_pipes, 
-							down_pipes) 
-		if game_over: 
-			return
+# defining a function to draw the text on the screen  
+def drawText(text, fontStyle, textColor, x_coordinate, y_coordinate):  
+    # using the render() function to render the text as image  
+    image = fontStyle.render(text, True, textColor)  
 
-		# check for your_score 
-		playerMidPos = horizontal + game_images['flappybird'].get_width()/2
-		for pipe in up_pipes: 
-			pipeMidPos = pipe['x'] + game_images['pipeimage'][0].get_width()/2
-			if pipeMidPos <= playerMidPos < pipeMidPos + 4: 
-				your_score += 1
-				print(f"Your your_score is {your_score}") 
+    # using the blit() function to display the image on the screen  
+    display_screen.blit(image, (x_coordinate, y_coordinate))  
 
-		if bird_velocity_y < bird_Max_Vel_Y and not bird_flapped: 
-			bird_velocity_y += birdAccY 
+# defining a function to reset the game  
+def resetGame():  
+    # calling the empty() function to remove all the sprites  
+    pipeGroup.empty()  
+    # describing the coordinates for the rectangle placement  
+    bird.rect.x = 200  
+    bird.rect.y = int(SCREEN_HEIGHT / 2)  
+    # setting the player score to 0  
+    playerScore = 0  
+    # returning the score  
+    return playerScore  
 
-		if bird_flapped: 
-			bird_flapped = False
-		playerHeight = game_images['flappybird'].get_height() 
-		vertical = vertical + \ 
-		    min(bird_velocity_y, elevation - vertical - playerHeight) 
+# creating a class of the pygame's Sprite() class to display the bird  
+class FlappyBird(pygame.sprite.Sprite):  
+    # defining an initializing function  
+    def __init__(self, x_coordinate, y_coordinate):  
+        pygame.sprite.Sprite.__init__(self)  
 
-		# move pipes to the left 
-		for upperPipe, lowerPipe in zip(up_pipes, down_pipes): 
-			upperPipe['x'] += pipeVelX 
-			lowerPipe['x'] += pipeVelX 
+        # creating an empty list  
+        self.image_list = []  
+        # setting the index and counter value to 0  
+        self.index = 0  
+        self.counter = 0  
 
-		# Add a new pipe when the first is 
-		# about to cross the leftmost part of the screen 
-		if 0 < up_pipes[0]['x'] < 5: 
-			newpipe = createPipe() 
-			up_pipes.append(newpipe[0]) 
-			down_pipes.append(newpipe[1]) 
+        # iterating through the range of 1 to 4  
+        for i in range(1, 4):  
+            # loading the sprite bird images from the directory  
+            # using the load() function of the pygame.image module  
+            image = pygame.image.load(f'FlappyBird\zd.jpg')  
+            
+            # using the append() function to add the image to the list  
+            self.image_list.append(image)  
 
-		# if the pipe is out of the screen, remove it 
-		if up_pipes[0]['x'] < -game_images['pipeimage'][0].get_width(): 
-			up_pipes.pop(0) 
-			down_pipes.pop(0) 
+        # setting the current image  
+        self.image = self.image_list[self.index]  
+        
+        # creating a rectangle to place the bird image  
+        self.rect = self.image.get_rect()  
+        # setting the position of the bird  
+        self.rect.center = [x_coordinate, y_coordinate]  
 
-		# Lets blit our game images now 
-		window.blit(game_images['background'], (0, 0)) 
-		for upperPipe, lowerPipe in zip(up_pipes, down_pipes): 
-			window.blit(game_images['pipeimage'][0], 
-						(upperPipe['x'], upperPipe['y'])) 
-			window.blit(game_images['pipeimage'][1], 
-						(lowerPipe['x'], lowerPipe['y'])) 
+        # defining the initial velocity of the bird  
+        self.velocity = 0  
+        self.pressed = False  
+    
+    # defining a function to handle the animation  
+    def update(self):  
+        # if the bird is flying then run this code  
+        if birdFlying == True:  
+            # adding gravity to the bird  
+            # incrementing the velocity of the bird  
+            self.velocity += 0.5  
 
-		window.blit(game_images['sea_level'], (ground, elevation)) 
-		window.blit(game_images['flappybird'], (horizontal, vertical)) 
+            # if the velocity of the bird is greater than 8.5  
+            # then set the final value to 8.5  
+            if self.velocity > 8.5:  
+                self.velocity = 8.5  
+            # if the rectangle's bottom is less than 576  
+            # then increment its y-axis value by velocity's integer value   
+            if self.rect.bottom < 576:  
+                self.rect.y += int(self.velocity)  
 
-		# Fetching the digits of score. 
-		numbers = [int(x) for x in list(str(your_score))] 
-		width = 0
+        # if the game is not over then run this code  
+        if gameOver == False:  
+            # if the mouse button is clicked  
+            if pygame.mouse.get_pressed()[0] == 1 and self.pressed == False:  
+                # setting the pressed variable value to True  
+                self.pressed = True  
+                # setting the velocity to -10  
+                self.velocity = -10  
 
-		# finding the width of score images from numbers. 
-		for num in numbers: 
-			width += game_images['scoreimages'][num].get_width() 
-		Xoffset = (window_width - width)/1.1
+            # if the mouse button is released  
+            if pygame.mouse.get_pressed()[0] == 0:  
+                # setting the pressed variable value to False  
+                self.pressed = False  
 
-		# Blitting the images on the window. 
-		for num in numbers: 
-			window.blit(game_images['scoreimages'][num], 
-						(Xoffset, window_width*0.02)) 
-			Xoffset += game_images['scoreimages'][num].get_width() 
+            # updating the counter by 1  
+            self.counter += 1  
+            # defining a variable to display the sprite cooldown  
+            flapCooldown = 5  
 
-		# Refreshing the game window and displaying the score. 
-		pygame.display.update() 
-		framepersecond_clock.tick(framepersecond) 
+            # if the counter value is greater than the cooldown  
+            # value set the counter value to 0  
+            if self.counter > flapCooldown:  
+                self.counter = 0  
+                
+                # updating the index value by 1  
+                self.index += 1  
 
+                # if the index value is greater than or equal to the  
+                # length of the list, set the index value to 0  
+                if self.index >= len(self.image_list):  
+                    self.index = 0  
 
-def isGameOver(horizontal, vertical, up_pipes, down_pipes): 
-	if vertical > elevation - 25 or vertical < 0: 
-		return True
+            # updating the current image  
+            self.image = self.image_list[self.index]  
+            
+            # rotating the bird  
+            self.image = pygame.transform.rotate(self.image_list[self.index], self.velocity * -2)  
+        # if the game is over  
+        else:  
+            # rotating the bird to -90  
+            self.image = pygame.transform.rotate(self.image_list[self.index], -90)  
 
-	for pipe in up_pipes: 
-		pipeHeight = game_images['pipeimage'][0].get_height() 
-		if(vertical < pipeHeight + pipe['y'] and\ 
-		abs(horizontal - pipe['x']) < game_images['pipeimage'][0].get_width()): 
-			return True
+# creating a class of the pygame's Sprite() class to display the pipes  
+class Pipe(pygame.sprite.Sprite):  
+    # defining an initializing function  
+    def __init__(self, x_coordinate, y_coordinate, position):  
+        pygame.sprite.Sprite.__init__(self)  
+        # loading the sprite pipe image from the directory  
+        # using the load() function of the pygame.image module  
+        self.image = pygame.image.load('images/pipe.png')  
+        
+        # creating a rectangle to place the pipe image  
+        self.rect = self.image.get_rect()  
 
-	for pipe in down_pipes: 
-		if (vertical + game_images['flappybird'].get_height() > pipe['y']) and\ 
-		abs(horizontal - pipe['x']) < game_images['pipeimage'][0].get_width(): 
-			return True
-	return False
+        # position 1 is from the top, -1 is from the bottom  
+        if position == 1:  
+            self.image = pygame.transform.flip(self.image, False, True)  
+            self.rect.bottomleft = [x_coordinate, y_coordinate - int(pipeGap / 2)]  
+        if position == -1:  
+            self.rect.topleft = [x_coordinate, y_coordinate + int(pipeGap / 2)]  
 
+    # defining a function to handle pipes animation and memory  
+    def update(self):  
+        # setting the scroll speed of the pipes  
+        self.rect.x -= scrollSpeed  
 
-def createPipe(): 
-	offset = window_height/3
-	pipeHeight = game_images['pipeimage'][0].get_height() 
-	y2 = offset + \ 
-		random.randrange( 
-			0, int(window_height - game_images['sea_level'].get_height() - 1.2 * offset)) 
-	pipeX = window_width + 10
-	y1 = pipeHeight - y2 + offset 
-	pipe = [ 
-		# upper Pipe 
-		{'x': pipeX, 'y': -y1}, 
+        # destroying the pipes once they left the screen to release the memory  
+        if self.rect.right < 0:  
+            self.kill()  
 
-		# lower Pipe 
-		{'x': pipeX, 'y': y2} 
-	] 
-	return pipe 
+# defining a class to display the button  
+class Button():  
+    # defining an initializing function  
+    def __init__(self, x_coordinate, y_coordinate, image):  
+        # defining some variables  
+        self.image = image  
+        self.rect = self.image.get_rect()  
+        self.rect.topleft = (x_coordinate, y_coordinate)  
+    # defining a function to draw the image on the screen  
+    def draw(self):  
+        # setting the initial action to false  
+        action = False  
 
+        # getting mouse position  
+        position = pygame.mouse.get_pos()  
 
-# program where the game starts 
-if __name__ == "__main__": 
+        # checking if mouse is over the button  
+        if self.rect.collidepoint(position):  
+            if pygame.mouse.get_pressed()[0] == 1:  
+                action = True  
 
-		# For initializing modules of pygame library 
-	pygame.init() 
-	framepersecond_clock = pygame.time.Clock() 
+        # drawing button  
+        display_screen.blit(self.image, (self.rect.x, self.rect.y))  
 
-	# Sets the title on top of game window 
-	pygame.display.set_caption('Flappy Bird Game') 
+        # returning the action  
+        return action  
 
-	# Load all the images which we will use in the game 
+# ceating the objects of the Group() class of the pygame.sprite module  
+birdGroup = pygame.sprite.Group()  
+pipeGroup = pygame.sprite.Group()  
 
-	# images for displaying score 
-	game_images['scoreimages'] = ( 
-		pygame.image.load('images/0.png').convert_alpha(), 
-		pygame.image.load('images/1.png').convert_alpha(), 
-		pygame.image.load('images/2.png').convert_alpha(), 
-		pygame.image.load('images/3.png').convert_alpha(), 
-		pygame.image.load('images/4.png').convert_alpha(), 
-		pygame.image.load('images/5.png').convert_alpha(), 
-		pygame.image.load('images/6.png').convert_alpha(), 
-		pygame.image.load('images/7.png').convert_alpha(), 
-		pygame.image.load('images/8.png').convert_alpha(), 
-		pygame.image.load('images/9.png').convert_alpha() 
-	) 
-	game_images['flappybird'] = pygame.image.load( 
-		birdplayer_image).convert_alpha() 
-	game_images['sea_level'] = pygame.image.load( 
-		sealevel_image).convert_alpha() 
-	game_images['background'] = pygame.image.load( 
-		background_image).convert_alpha() 
-	game_images['pipeimage'] = (pygame.transform.rotate(pygame.image.load( 
-		pipeimage).convert_alpha(), 180), pygame.image.load( 
-	pipeimage).convert_alpha()) 
+# creating an object of the FlappyBird() class with  
+bird = FlappyBird(200, int(SCREEN_HEIGHT / 2))  
 
-	print("WELCOME TO THE FLAPPY BIRD GAME") 
-	print("Press space or enter to start the game") 
+# using the add() function to add the object of the FlappyBird() class to the group  
+birdGroup.add(bird)  
 
-	# Here starts the main game 
+# creating the restart button instance  
+restartButton = Button(150, 100, button)  
 
-	while True: 
+# declaring a variable and initializing its value with True  
+game_run = True  
 
-		# sets the coordinates of flappy bird 
+# using the while loop  
+while game_run:  
+    # setting the fps of the game  
+    game_clock.tick(game_fps)  
 
-		horizontal = int(window_width/5) 
-		vertical = int( 
-			(window_height - game_images['flappybird'].get_height())/2) 
-		ground = 0
-		while True: 
-			for event in pygame.event.get(): 
+    # drawing the background  
+    display_screen.blit(background, (0, 0))  
 
-				# if user clicks on cross button, close the game 
-				if event.type == QUIT or (event.type == KEYDOWN and \ 
-										event.key == K_ESCAPE): 
-					pygame.quit() 
-					sys.exit() 
+    # drawing the bird  
+    birdGroup.draw(display_screen)  
 
-				# If the user presses space or 
-				# up key, start the game for them 
-				elif event.type == KEYDOWN and (event.key == K_SPACE or\ 
-												event.key == K_UP): 
-					flappygame() 
+    # calling the update() function  
+    birdGroup.update()  
 
-				# if user doesn't press anykey Nothing happen 
-				else: 
-					window.blit(game_images['background'], (0, 0)) 
-					window.blit(game_images['flappybird'], 
-								(horizontal, vertical)) 
-					window.blit(game_images['sea_level'], (ground, elevation)) 
-					pygame.display.update() 
-					framepersecond_clock.tick(framepersecond) 
+    # drawing the pipes  
+    pipeGroup.draw(display_screen)  
+
+    # drawing the base  
+    display_screen.blit(base, (baseScroll, 576))  
+
+    # checking the score  
+    if len(pipeGroup) > 0:  
+        # checking if the bird is over the pipe and passed the left side of it but not the right size  
+        if birdGroup.sprites()[0].rect.left > pipeGroup.sprites()[0].rect.left\
+            and birdGroup.sprites()[0].rect.left < pipeGroup.sprites()[0].rect.right\
+                and passPipe == False:  
+                # setting the boolean value to true  
+                passPipe = True  
+
+        # checking if the bird has passed the left side of the pipe  
+        if passPipe == True:  
+            # checking if the bird has passed the right side of the pipe  
+            if birdGroup.sprites()[0].rect.left > pipeGroup.sprites()[0].rect.right:  
+                # incrementing the score by 1  
+                playerScore += 1  
+                # setting the boolean value back to false  
+                passPipe = False  
+
+    # calling the drawText() function to display the calculated score on the screen  
+    drawText(str(playerScore), fontStyle, black, int(SCREEN_WIDTH / 2), 15)  
+
+    # looking for collision  
+    if pygame.sprite.groupcollide(birdGroup, pipeGroup, False, False) or bird.rect.top < 0:  
+        gameOver = True  
+
+    # checking if bird has hit the ground  
+    if bird.rect.bottom >= 576:  
+        gameOver = True  
+        birdFlying = False  
+
+    # checking if the game is not over  
+    if gameOver == False and birdFlying == True:  
+
+        # generating new pipes  
+        timeNow = pygame.time.get_ticks()  
+        if timeNow - lastPipe > pipeFrequency:  
+            pipeHeight = random.randint(-100, 100)  
+            bottomPipe = Pipe(SCREEN_WIDTH, int(SCREEN_HEIGHT / 2) + pipeHeight, -1)  
+            topPipe = Pipe(SCREEN_WIDTH, int(SCREEN_HEIGHT / 2) + pipeHeight, 1)  
+            pipeGroup.add(bottomPipe)  
+            pipeGroup.add(topPipe)  
+            lastPipe = timeNow  
+
+        # scrolling the base  
+        baseScroll -= scrollSpeed  
+        if abs(baseScroll) > 70:  
+            baseScroll = 0  
+        # calling the update() function  
+        pipeGroup.update()  
+
+    # checking if the game over and reset  
+    if gameOver == True:  
+        if restartButton.draw() == True:  
+            gameOver = False  
+            playerScore = resetGame()  
+
+    # using the for loop to iterate through the events of the game  
+    for event in pygame.event.get():  
+        # setting the variable value to False if the event's type is equivalent to pygame's QUIT constant  
+        if event.type == pygame.QUIT:  
+            game_run = False  
+        # setting the variable value to True if the event's type is equivalent to pygame's MOUSEBUTTONDOWN constant, the bird is not flying and game is not over  
+        if event.type == pygame.MOUSEBUTTONDOWN and birdFlying == False and gameOver == False:  
+            birdFlying = True  
+
+    # using the update() function of the pygame.display module to update the events of the game  
+    pygame.display.update()  
+
+# using the quit() function to quit the game  
+pygame.quit()  
