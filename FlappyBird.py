@@ -6,12 +6,8 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
-# Window
-win_height = 720
-win_width = 551
-window = pygame.display.set_mode((win_width, win_height))
 
-# Images
+# Images refer
 bird_images = [pygame.image.load("FlappyBird\gbird_down.png"),
                 pygame.image.load("FlappyBird\gbird_mid.png"),
                 pygame.image.load("FlappyBird\gbird_up.png")]
@@ -21,6 +17,11 @@ top_pipe_image = pygame.image.load("FlappyBird\pipe_top.png")
 bottom_pipe_image = pygame.image.load("FlappyBird\pipe_bottom.png")
 game_over_image = pygame.image.load("FlappyBird\game_over.png")
 start_image = pygame.image.load("FlappyBird\start.png")
+
+# Window size
+win_height = 720
+win_width = 550
+window = pygame.display.set_mode((win_width, win_height))
 
 # Game
 scroll_speed = 1
