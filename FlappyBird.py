@@ -7,9 +7,7 @@ pygame.init()
 clock = pygame.time.Clock()
 
 # Images refer
-bird_images = [pygame.image.load("FlappyBird\gbird_down.png"),
-                pygame.image.load("FlappyBird\gbird_mid.png"),
-                pygame.image.load("FlappyBird\gbird_up.png")]
+bird_images = [pygame.image.load("FlappyBird\gbird_down.png"),pygame.image.load("FlappyBird\gbird_mid.png"),pygame.image.load("FlappyBird\gbird_up.png")]
 skyline_image = pygame.image.load("FlappyBird\gbackground.png")
 ground_image = pygame.image.load("FlappyBird\ground.png")
 top_pipe_image = pygame.image.load("FlappyBird\pipe_top.png")
