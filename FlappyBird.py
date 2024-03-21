@@ -6,7 +6,6 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
-
 # Images refer
 bird_images = [pygame.image.load("FlappyBird\gbird_down.png"),
                 pygame.image.load("FlappyBird\gbird_mid.png"),
