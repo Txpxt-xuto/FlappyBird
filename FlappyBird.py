@@ -6,7 +6,7 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
-# Images refer
+#กำหนดรูปภาพภายในตัวเกม
 bird_images = [pygame.image.load("FlappyBird\gbird_down.png"),pygame.image.load("FlappyBird\gbird_mid.png"),pygame.image.load("FlappyBird\gbird_up.png")]
 skyline_image = pygame.image.load("FlappyBird\gbackground.png")
 ground_image = pygame.image.load("FlappyBird\ground.png")
@@ -15,12 +15,11 @@ bottom_pipe_image = pygame.image.load("FlappyBird\pipe_bottom.png")
 game_over_image = pygame.image.load("FlappyBird\game_over.png")
 start_image = pygame.image.load("FlappyBird\start.png")
 
-# Window size
+#ขนาดหน้าต่างแสดงผล
 win_height = 720
 win_width = 550
 window = pygame.display.set_mode((win_width, win_height))
 
-# Game
 scroll_speed = 1
 bird_start_position = (100, 250)
 score = 0
